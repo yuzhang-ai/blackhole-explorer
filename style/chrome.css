@@ -287,10 +287,24 @@ html[data-style="constructivist"] .style-cell[aria-checked="true"]::after {
 html[data-style="ink"] .style-entry,
 html[data-style="ink"] .style-rail,
 html[data-style="ink"] .style-toast,
+html[data-style="ink"] .style-fallback,
 html[data-style="ink"] #credit,
 html[data-style="ink"] .style-hud {
+  border: 0;
   border-radius: 0;
   box-shadow: none;
+}
+html[data-style="ink"] .style-entry {
+  border-bottom: 3px solid var(--accent-fill);
+}
+html[data-style="ink"] .style-seal {
+  border: 0;
+  background: var(--accent-fill);
+  color: var(--accent-text);
+}
+html[data-style="ink"] .style-cell[aria-checked="true"] {
+  outline: none;
+  background: rgba(179, 38, 30, 0.1);
 }
 .style-entry:focus-visible,
 .style-cell:focus-visible {

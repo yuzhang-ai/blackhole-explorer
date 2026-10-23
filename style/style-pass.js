@@ -15,26 +15,60 @@ function gridMask(px, cell) {
   return Z(1).sub(rF(Z(0), Z(1.05), YP(dist.x, dist.y)));
 }
 function brushInk(e, S, bMul, ang0, ang1, peakPx, dense) {
-  let wob = Z(1).add(nF(S.ang.mul(2).add(bMul)).mul(.03));
+  let wob = Z(1).add(nF(S.ang.mul(2.4).add(bMul)).mul(.04));
   let bC = S.bCrit.mul(bMul).mul(wob);
   let along = S.ang.sub(Z(ang0)).div(Z(ang1 - ang0));
-  let gate = rF(Z(-.02), Z(.06), along).mul(Z(1).sub(rF(Z(.72), Z(1.02), along)));
-  let rise = rF(Z(.02), Z(.28), along);
+  let gate = rF(Z(-.03), Z(.07), along).mul(Z(1).sub(rF(Z(.9), Z(1.04), along)));
+  let rise = rF(Z(.04), Z(.2), along);
   let px = XP(Z(2), Z(peakPx), rise);
-  px = XP(px, Z(1), rF(Z(.38), Z(1), along));
+  px = XP(px, Z(1), rF(Z(.62), Z(1), along));
   let half = S.bPx.mul(px).mul(e.strokeScale).mul(.5);
   let rd = jP(S.impact.sub(bC));
-  let body = Z(1).sub(rF(Z(0), half.max(S.bPx.mul(.8)), rd));
-  let brk = OF(sF(HP(along.mul(3.2).add(bMul * 5)), Z(1.6)));
-  let keep = dense ? rF(Z(.02), Z(.2), brk) : rF(Z(.28), Z(.62), brk);
-  let edge = rF(half.mul(.22), half.add(S.bPx), rd);
-  let holeN = OF(sF(along.mul(11).add(bMul * 4), rd.mul(26).add(1)));
-  let holes = rF(dense ? Z(.62) : Z(.4), dense ? Z(.9) : Z(.7), holeN);
-  holes = holes.mul(XP(Z(.35), Z(1), JP(edge, rF(Z(.55), Z(.95), along)))).mul(e.inkDry);
-  let ink = FP(body.mul(gate).mul(keep).mul(Z(1).sub(holes)), 0, 1);
-  let wash = Z(1).sub(rF(Z(0), half.mul(2.8).add(S.bPx.mul(3)), rd)).mul(rF(Z(-.05), Z(.12), along)).mul(Z(1).sub(rF(Z(.7), Z(1.05), along)));
-  let core = Z(1).sub(rF(Z(0), half.mul(.28).add(S.bPx.mul(.4)), rd)).mul(ink);
-  return { ink, wash, core };
+  let body = Z(1).sub(rF(half.mul(.58), half.add(S.bPx.mul(.35)), rd));
+  let across = rd.div(half.max(S.bPx));
+  let lanes = nF(across.mul(12.5).add(nF(along.mul(5.5).add(bMul)).mul(1.6))).mul(.5).add(.5);
+  let strand = rF(Z(.16), Z(.58), lanes);
+  let brk = OF(sF(HP(along.mul(dense ? 2.4 : 6.2).add(bMul * 3)), Z(dense ? .7 : 2.2)));
+  let keep = dense ? rF(Z(.04), Z(.22), brk) : rF(Z(.2), Z(.5), brk);
+  let holeN = OF(sF(along.mul(dense ? 9 : 19).add(bMul * 2), rd.mul(52).add(along.mul(4))));
+  let holes = rF(dense ? Z(.48) : Z(.18), dense ? Z(.82) : Z(.5), holeN).mul(e.inkDry);
+  let side = rF(Z(.28), Z(.85), across);
+  let tail = rF(Z(.55), Z(.98), along);
+  holes = FP(holes.mul(XP(Z(.32), Z(1), JP(side, tail))), 0, 1);
+  let ink = body.mul(gate).mul(keep).mul(XP(Z(.42), Z(1), strand)).mul(Z(1).sub(holes));
+  let half2 = half.mul(.55);
+  let rd2 = jP(S.impact.sub(bC.add(half.mul(.2))));
+  let lanes2 = nF(rd2.div(half2.max(S.bPx)).mul(9.5).add(1.7)).mul(.5).add(.5);
+  let ink2 = Z(1).sub(rF(half2.mul(.5), half2, rd2)).mul(gate).mul(keep).mul(rF(Z(.22), Z(.62), lanes2)).mul(Z(1).sub(holes.mul(.65)));
+  ink = FP(JP(ink, ink2.mul(.8)), 0, 1);
+  let wash = Z(1).sub(rF(Z(0), half.mul(3.6).add(S.bPx.mul(5)), rd)).mul(rF(Z(-.06), Z(.12), along)).mul(Z(1).sub(rF(Z(.78), Z(1.08), along)));
+  let washMid = Z(1).sub(rF(Z(0), half.mul(1.85).add(S.bPx.mul(2)), rd)).mul(gate);
+  let core = Z(1).sub(rF(Z(0), half.mul(.14).add(S.bPx.mul(.3)), rd)).mul(ink).mul(Z(1).sub(tail.mul(.7)));
+  return { ink, wash, washMid, core };
+}
+function lensArc(e, S) {
+  let along = S.ang.sub(Z(-2.35)).div(Z(2.22));
+  let gate = rF(Z(-.02), Z(.06), along).mul(Z(1).sub(rF(Z(.9), Z(1.03), along)));
+  let bow = nF(along.mul(3.1416)).mul(.05);
+  let bC = S.bCrit.mul(Z(1.06).add(bow));
+  let thick = rF(Z(0), Z(.16), along);
+  let px = XP(Z(4), Z(14), thick);
+  px = XP(px, Z(1.2), rF(Z(.58), Z(1), along));
+  let half = S.bPx.mul(px).mul(e.strokeScale).mul(.5);
+  let rd = jP(S.impact.sub(bC));
+  let body = Z(1).sub(rF(half.mul(.62), half.add(S.bPx.mul(.25)), rd));
+  let across = rd.div(half.max(S.bPx));
+  let strand = rF(Z(.2), Z(.62), nF(across.mul(8).add(along.mul(4))).mul(.5).add(.5));
+  let endW = rF(Z(.52), Z(.96), along);
+  let holeN = OF(sF(along.mul(13), rd.mul(36).add(2)));
+  let holes = rF(Z(.3), Z(.62), holeN).mul(e.inkDry).mul(endW);
+  let brk = OF(sF(HP(along.mul(7).add(1.3)), Z(2.8)));
+  let keep = XP(Z(1), rF(Z(.18), Z(.55), brk), endW);
+  let ink = FP(body.mul(gate).mul(keep).mul(XP(Z(.7), Z(1), strand)).mul(Z(1).sub(holes)), 0, 1);
+  let wash = Z(1).sub(rF(Z(0), half.mul(2.8).add(S.bPx.mul(2)), rd)).mul(gate);
+  let washMid = Z(1).sub(rF(Z(0), half.mul(1.45), rd)).mul(gate);
+  let core = Z(1).sub(rF(Z(0), half.mul(.2).add(S.bPx.mul(.2)), rd)).mul(ink).mul(Z(1).sub(endW));
+  return { ink, wash, washMid, core };
 }
 function makeStruct(e, texNode) {
   let uv = eF;
@@ -55,7 +89,7 @@ function makeStruct(e, texNode) {
   let lumC = lum.div(lum.add(.45)).toVar();
   let alpha = samp.a;
   let bCrit = Z(SP.bCrit);
-  let diskA = rF(Z(.8), Z(3), alpha);
+  let diskA = rF(Z(.8), Z(3), alpha).toVar();
   let star = rF(Z(.1), Z(.22), alpha).mul(Z(1).sub(rF(Z(.4), Z(.55), alpha))).toVar();
   let near = Z(1).sub(rF(bCrit.mul(1.2), bCrit.mul(2.4), impact));
   let diskL = rF(Z(.38), Z(.7), lumC).mul(near).mul(Z(1).sub(star));
@@ -67,46 +101,50 @@ function makeStruct(e, texNode) {
   let ang = PP(ndcY, ndcX).toVar();
   let rad = GP(sF(ndcX.mul(e.aspect), ndcY)).toVar();
   let bPx = e.cameraDistance.mul(e.tanHalf).mul(2).div(e.resolution.y.max(1)).toVar();
-  return { uv, ndcX, ndcY, dir, impact, lum, lumC, disk, star, shadow, edge, ang, rad, bPx, bCrit, inHole };
+  return { uv, ndcX, ndcY, dir, impact, lum, lumC, disk, diskA, star, shadow, edge, ang, rad, bPx, bCrit, inHole };
 }
 function styleInk(e, S) {
   let paper = lin3(`#EDE4D0`), jiao = lin3(`#0B0906`), nong = lin3(`#231D17`), zhong = lin3(`#4A4036`), dan = lin3(`#9A8F80`), qing = lin3(`#D8CFBE`);
   let fiber = OF(sF(S.uv.x.mul(e.resolution.x).mul(.18), S.uv.y.mul(e.resolution.y).mul(.18)));
   let col = paper.add(cF(1, 1, 1).mul(fiber.sub(.5).mul(.02)));
-  let far = Z(1).sub(S.inHole).mul(Z(1).sub(S.disk.mul(.9))).mul(rF(S.bCrit.mul(1.55), S.bCrit.mul(2.2), S.impact));
-  let ridge = nF(S.uv.x.mul(5.5).add(.6)).mul(.5).add(.5);
-  ridge = ridge.add(nF(S.uv.x.mul(13)).mul(.15));
-  let mtnH = Z(.12).add(ridge.mul(.16));
-  let mtn = Z(1).sub(rF(mtnH.sub(.045), mtnH.add(.03), S.uv.y));
-  mtn = mtn.mul(rF(Z(.58), Z(.72), S.uv.x)).mul(far);
-  col = XP(col, dan, mtn.mul(.72));
-  col = XP(col, zhong, mtn.mul(rF(mtnH.sub(.01), mtnH.add(.012), S.uv.y)).mul(.45));
-  let c1 = Z(1).sub(rF(Z(.04), Z(.2), GP(sF(S.uv.x.sub(.78), S.uv.y.sub(.8)))));
-  let c2 = Z(1).sub(rF(Z(.02), Z(.14), GP(sF(S.uv.x.sub(.6), S.uv.y.sub(.68)))));
-  let cloud = JP(c1, c2.mul(.75)).mul(rF(Z(.52), Z(.66), S.uv.y)).mul(rF(Z(.42), Z(.58), S.uv.x)).mul(far);
-  col = XP(col, XP(qing, dan, c1), cloud.mul(.62));
+  let far = Z(1).sub(S.inHole).mul(Z(1).sub(S.disk)).mul(rF(S.bCrit.mul(1.7), S.bCrit.mul(2.35), S.impact));
+  let ridge = nF(S.uv.x.mul(5.2).add(.4)).mul(.5).add(.5);
+  ridge = ridge.add(nF(S.uv.x.mul(12)).mul(.1));
+  let mtnH = Z(.18).add(ridge.mul(.12));
+  let mtn = Z(1).sub(rF(mtnH.sub(.01), mtnH.add(.008), S.uv.y));
+  mtn = mtn.mul(rF(Z(.66), Z(.82), S.uv.x)).mul(far);
+  col = XP(col, dan, mtn.mul(.5));
+  let c1 = Z(1).sub(rF(Z(.045), Z(.062), GP(sF(S.uv.x.sub(.8), S.uv.y.sub(.84)))));
+  let c2 = Z(1).sub(rF(Z(.03), Z(.046), GP(sF(S.uv.x.sub(.66), S.uv.y.sub(.74)))));
+  let cloud = JP(c1, c2.mul(.85)).mul(rF(Z(.7), Z(.8), S.uv.y)).mul(rF(Z(.55), Z(.7), S.uv.x)).mul(far);
+  col = XP(col, qing, cloud.mul(.6));
   let rough = OF(sF(S.ang.mul(2.6), Z(1.4))).sub(.5);
   let edgeB = S.bCrit.mul(Z(1).add(rough.mul(.03)));
   let hole = Z(1).sub(rF(edgeB.mul(.96), edgeB.mul(1.02), S.impact));
   let halo = rF(S.bCrit.mul(.98), S.bCrit.mul(1.05), S.impact).mul(Z(1).sub(rF(S.bCrit.mul(1.12), S.bCrit.mul(1.4), S.impact)));
   col = XP(col, qing, halo.mul(.4));
-  let ink = Z(0), wash = Z(0), core = Z(0);
+  let ink = Z(0), wash = Z(0), washMid = Z(0), core = Z(0);
   let strokes = [
-    [1.04, -2.6, -.2, 16, 1],
-    [.78, .35, 2.15, 18, 0],
-    [1.16, -.2, 1.35, 12, 0],
-    [1.42, .8, 2.55, 9, 0],
-    [1.7, -1.4, .15, 7, 0]
+    [.7, .2, 2.3, 22, 0],
+    [1.15, -.15, 1.55, 16, 0],
+    [1.46, .45, 2.55, 13, 0],
+    [1.82, -1.2, .4, 9, 0]
   ];
   for (let s of strokes) {
     let b = brushInk(e, S, s[0], s[1], s[2], s[3], s[4]);
     ink = JP(ink, b.ink);
     wash = JP(wash, b.wash);
+    washMid = JP(washMid, b.washMid);
     core = JP(core, b.core);
   }
-  col = XP(col, qing, FP(wash.mul(.65), 0, 1));
-  col = XP(col, dan, FP(wash.mul(ink.add(.25)).mul(.35), 0, 1));
-  col = XP(col, zhong, FP(ink.mul(.5), 0, 1));
+  let arc = lensArc(e, S);
+  ink = JP(ink, arc.ink);
+  wash = JP(wash, arc.wash);
+  washMid = JP(washMid, arc.washMid);
+  core = JP(core, arc.core);
+  col = XP(col, qing, FP(wash.mul(.92), 0, 1));
+  col = XP(col, dan, FP(washMid.mul(.8), 0, 1));
+  col = XP(col, zhong, FP(ink.mul(.62), 0, 1));
   col = XP(col, nong, ink);
   col = XP(col, jiao, core);
   let holeInk = hole.mul(Z(1).sub(ink)).mul(Z(1).sub(rF(Z(.28), Z(.62), S.lumC)));
@@ -120,23 +158,34 @@ function styleBlue(e, S) {
   let pitch = e.gridPitch;
   col = XP(col, gridC, gridMask(px, pitch));
   col = XP(col, lineC, gridMask(px, pitch.mul(4)).mul(.9));
-  let lw = S.bPx.mul(e.strokeScale);
+  let lw = S.bPx.mul(e.strokeScale).mul(.7);
   let lines = Z(0);
   for (let k of [.98, 1, 1.1]) lines = JP(lines, Z(1).sub(rF(Z(0), lw.mul(1.05), jP(S.impact.sub(S.bCrit.mul(k))))));
-  for (let k of [1.22, 1.4, 1.62, 1.9, 2.25, 2.7]) {
-    let w = lw.mul(XP(Z(1.35), Z(.65), rF(Z(1.2), Z(2.6), Z(k))));
-    let iso = Z(1).sub(rF(Z(0), w, jP(S.impact.sub(S.bCrit.mul(k)))));
-    iso = iso.mul(rF(Z(.06), Z(.42), S.disk));
+  for (let i = 0; i < 24; i++) {
+    let k = 1.12 + i * 0.078;
+    let fall = rF(Z(.015), Z(.55), S.disk);
+    let w = lw.mul(XP(Z(.28), Z(1.05), fall)).mul(XP(Z(1.2), Z(.62), rF(Z(1.1), Z(3), Z(k))));
+    let wob = nF(S.ang.mul(3).add(k * 1.7)).mul(S.bCrit.mul(.012));
+    let iso = Z(1).sub(rF(Z(0), w, jP(S.impact.sub(S.bCrit.mul(k).add(wob)))));
+    let nse = OF(sF(HP(nF(S.ang).mul(6).add(k * 5)), HP(S.impact.mul(6).add(k))));
+    let keep = rF(XP(Z(.62), Z(.02), fall), XP(Z(.92), Z(.22), fall), nse);
+    iso = iso.mul(rF(Z(.012), Z(.16), S.disk)).mul(keep);
     lines = JP(lines, iso);
   }
-  let cuts = Z(0);
-  for (let a of [-2.15, -.65, .6, 1.75, 2.55]) {
-    let cut = Z(1).sub(rF(Z(0), Z(.016).mul(e.strokeScale), jP(S.ang.sub(a))));
-    let band = rF(S.bCrit.mul(1.04), S.bCrit.mul(1.18), S.impact).mul(Z(1).sub(rF(S.bCrit.mul(1.85), S.bCrit.mul(2.25), S.impact)));
-    let dash = tF(UP(S.impact.mul(3.2)).lessThan(.5), Z(1), Z(0));
-    cuts = JP(cuts, cut.mul(band).mul(rF(Z(.12), Z(.48), S.disk)).mul(dash));
+  let dDisk = GP(sF(RP(S.disk), zP(S.disk)));
+  let edge = Z(1).sub(rF(Z(0), YP(dDisk.mul(1.2), Z(.2)), jP(S.disk.sub(.36))));
+  edge = edge.mul(rF(Z(.03), Z(.11), dDisk));
+  let phase = UP(nF(S.ang).mul(2.4).add(S.rad.mul(2.2)));
+  let seg = rF(Z(0), Z(.05), phase).mul(Z(1).sub(rF(Z(.14), Z(.4), phase)));
+  lines = JP(lines, edge.mul(seg));
+  let edgeIn = Z(1).sub(rF(Z(0), YP(dDisk.mul(.85), Z(.14)), jP(S.disk.sub(.58))));
+  let phaseIn = UP(nF(S.ang.add(1.2)).mul(2.1).add(1.3));
+  let segIn = rF(Z(.02), Z(.08), phaseIn).mul(Z(1).sub(rF(Z(.16), Z(.34), phaseIn)));
+  lines = JP(lines, edgeIn.mul(segIn).mul(rF(Z(.15), Z(.4), S.disk)));
+  for (let a of [-2.2, -1.35, -.4, .45, 1.25, 2.05, 2.7]) {
+    let tick = Z(1).sub(rF(Z(0), Z(.012).mul(e.strokeScale), jP(S.ang.sub(a))));
+    lines = JP(lines, tick.mul(edge));
   }
-  lines = JP(lines, cuts);
   let cx = jP(S.uv.x.sub(.5)).mul(e.resolution.x);
   let cy = jP(S.uv.y.sub(.5)).mul(e.resolution.y);
   let hLine = Z(1).sub(rF(Z(0), Z(1.05), cy));
@@ -153,45 +202,54 @@ function styleBlue(e, S) {
 }
 function styleVangogh(e, S) {
   let deep = lin3(`#0B1D51`), cobalt = lin3(`#1C3F94`), lightB = lin3(`#7FB2D9`), yellow = lin3(`#F2C230`), hi = lin3(`#FFE066`), ochre = lin3(`#C98A1B`), hole = lin3(`#050508`);
-  let reg = HP(S.ang.add(3.2).mul(.85)).add(HP(S.rad.mul(3.2)));
-  let flipH = OF(sF(reg, Z(1.7)));
-  let flip = tF(flipH.greaterThan(.46), Z(1), Z(-1));
-  let radialMix = OF(sF(reg.add(4), Z(2.2)));
-  let along = S.ang.mul(flip).mul(2.1).add(S.rad.mul(XP(Z(3.5), Z(12), radialMix)));
-  let across = S.rad.mul(18).div(e.strokeScale).mul(flip).add(S.ang.mul(XP(Z(1.1), Z(-1.4), radialMix)));
-  let dashU = UP(along.mul(1.6));
-  let dash = rF(Z(0), Z(.06), dashU).mul(Z(1).sub(rF(Z(.28), Z(.48), dashU)));
+  let sa = nF(S.ang);
+  let ca = nF(S.ang.add(1.5707963));
+  let flip = nF(sa.mul(1.4).add(ca.mul(1.9)).add(S.rad.mul(.6)));
+  let radialMix = ca.mul(.5).add(.5);
+  let along = sa.mul(2.4).add(ca.mul(XP(Z(-1.5), Z(1.7), radialMix))).add(S.rad.mul(XP(Z(4.5), Z(12), radialMix))).mul(flip.mul(.35).add(1));
+  let across = S.rad.mul(32).div(e.strokeScale).add(sa.mul(XP(Z(2.4), Z(-1.6), radialMix))).add(ca.mul(.8));
+  let dashU = UP(along.mul(3.1));
+  let dash = rF(Z(0), Z(.045), dashU).mul(Z(1).sub(rF(Z(.14), Z(.36), dashU)));
+  let dashV = UP(along.mul(3.1).add(.42));
+  let dash2 = rF(Z(0), Z(.04), dashV).mul(Z(1).sub(rF(Z(.12), Z(.3), dashV)));
   let ridgeD = jP(UP(across).sub(.5));
-  let ridge = Z(1).sub(rF(Z(.015).mul(e.strokeScale), Z(.14).mul(e.strokeScale), ridgeD));
-  let crest = Z(1).sub(rF(Z(0), Z(.045).mul(e.strokeScale), ridgeD)).mul(dash);
-  let mark = dash.mul(ridge);
+  let ridge = Z(1).sub(rF(Z(.012), Z(.1), ridgeD));
+  let crest = Z(1).sub(rF(Z(0), Z(.032), ridgeD)).mul(JP(dash, dash2));
+  let mark = JP(dash, dash2.mul(.7)).mul(ridge);
   let col = XP(deep, cobalt, FP(mark.mul(1.15), 0, 1));
-  col = XP(col, lightB, crest.mul(.5).mul(Z(1).sub(S.disk)));
-  let g = Z(3.1);
+  col = XP(col, lightB, crest.mul(.45).mul(Z(1).sub(S.disk)));
+  let g = Z(11);
   let hshJ = OF(sF(S.dir.y.mul(2.3), S.dir.x.add(1.7)));
   let qx = S.dir.x.mul(g).add(S.dir.z.mul(hshJ));
-  let qy = S.dir.y.mul(g.mul(XP(Z(.7), Z(1.5), hshJ))).sub(S.dir.z.mul(.8));
+  let qy = S.dir.y.mul(g.mul(XP(Z(.72), Z(1.45), hshJ))).sub(S.dir.z.mul(.8));
   let cell = sF(HP(qx), HP(qy));
   let hsh = OF(sF(cell.x.add(2.2), cell.y.mul(1.7).add(5)));
   let h2 = OF(sF(cell.y.add(3), cell.x.mul(.7)));
   let h3 = OF(sF(cell.x.mul(1.4).add(8), Z(4)));
   let jx = OF(sF(cell.x, Z(8))).sub(.5);
   let jy = OF(sF(Z(3), cell.y)).sub(.5);
-  let radK = h2.mul(1.1).add(.35);
-  let local = sF(UP(qx).sub(.5).sub(jx.mul(.55)), UP(qy).sub(.5).sub(jy.mul(.55)));
+  let radK = h2.mul(.85).add(.55);
+  let local = sF(UP(qx).sub(.5).sub(jx.mul(.4)), UP(qy).sub(.5).sub(jy.mul(.4)));
   let d = GP(local).div(radK);
-  let nRing = HP(h3.mul(3.2)).add(1);
-  let rings = Z(1).sub(rF(Z(0), Z(.045), jP(UP(d.mul(nRing)).sub(.18))));
-  let core = Z(1).sub(rF(Z(.01), Z(.05), d));
-  let starM = tF(hsh.greaterThan(.8), Z(1), Z(0)).mul(tF(d.lessThan(.42), Z(1), Z(0)));
-  starM = starM.mul(tF(S.impact.greaterThan(S.bCrit.mul(1.75)), Z(1), Z(0)));
-  starM = starM.mul(Z(1).sub(S.disk)).mul(Z(1).sub(S.shadow));
-  let starCol = XP(cobalt, yellow, FP(core.add(rings.mul(h2)), 0, 1));
-  starCol = XP(starCol, hi, core.mul(hsh.mul(.4).add(.6)));
-  col = XP(col, starCol, FP(starM.mul(JP(core, rings)), 0, 1));
-  let diskMark = mark.mul(rF(Z(.22), Z(.55), S.disk));
-  col = XP(col, XP(ochre, yellow, crest), diskMark);
-  col = XP(col, hi, crest.mul(diskMark));
+  let nRing = HP(h3.mul(3)).add(2);
+  let rings = Z(1).sub(rF(Z(.015), Z(.055), jP(UP(d.mul(nRing)).sub(.2))));
+  let orb = Z(1).sub(rF(Z(.18), Z(.62), d));
+  let starM = tF(hsh.greaterThan(.965), Z(1), Z(0)).mul(tF(d.lessThan(.62), Z(1), Z(0)));
+  starM = starM.mul(tF(S.impact.greaterThan(S.bCrit.mul(1.9)), Z(1), Z(0)));
+  starM = starM.mul(Z(1).sub(rF(Z(.04), Z(.28), S.diskA))).mul(Z(1).sub(S.shadow));
+  let starCol = XP(ochre, yellow, FP(rings.mul(.65).add(orb.mul(.35)), 0, 1));
+  starCol = XP(starCol, hi, rings.mul(h2.mul(.45).add(.4)));
+  col = XP(col, starCol, FP(starM.mul(JP(rings, orb.mul(.45))), 0, 1));
+  let diskGate = rF(Z(.15), Z(.5), S.diskA);
+  let dAcross = jP(UP(across.mul(1.85).add(sa.mul(1.3))).sub(.5));
+  let dRidge = Z(1).sub(rF(Z(.008), Z(.08), dAcross));
+  let dU = UP(along.mul(4.6).add(ca));
+  let dDash = rF(Z(0), Z(.04), dU).mul(Z(1).sub(rF(Z(.12), Z(.28), dU)));
+  let diskMark = mark.mul(diskGate);
+  let diskMark2 = dRidge.mul(dDash).mul(diskGate);
+  col = XP(col, ochre, FP(diskMark.add(diskMark2.mul(.9)), 0, 1));
+  col = XP(col, yellow, crest.mul(diskGate));
+  col = XP(col, hi, crest.mul(diskMark2));
   col = XP(col, hole, S.shadow);
   return YP(JP(col, cF(0, 0, 0)), cF(1, 1, 1));
 }

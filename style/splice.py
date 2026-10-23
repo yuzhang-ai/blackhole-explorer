@@ -103,7 +103,8 @@ def upgrade(old, new):
     if new in html:
         return
     if old not in html:
-        raise SystemExit("upgrade missing: " + old[:90])
+        print("upgrade skip:", old[:70])
+        return
     html = html.replace(old, new, 1)
 
 upgrade(
@@ -121,6 +122,10 @@ upgrade(
 upgrade(
     "e.taaBlend.value=$.taaBlend,e.styleTier&&(e.styleTier.value=eL.tier||1)}",
     "e.taaBlend.value=$.taaBlend,e.styleTier&&(e.styleTier.value=eL.tier||1),e.styleId&&((e.styleId.value|0)===3)&&(e.bloomIntensity.value=0)}",
+)
+upgrade(
+    "strokeScale:Q(1),gridPitch:Q(28),inkDry:Q(.55)",
+    "strokeScale:Q(1.45),gridPitch:Q(28),inkDry:Q(.82)",
 )
 
 INDEX.write_text(html)
