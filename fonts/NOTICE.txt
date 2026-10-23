@@ -1,0 +1,11 @@
+These webfonts are shipped so the style chrome can load offline.
+Each face is under the SIL Open Font License 1.1 (see OFL.txt).
+
+JetBrains Mono — Copyright 2020 The JetBrains Mono Project Authors
+Cormorant Garamond — Copyright 2015 The Cormorant Project Authors
+IBM Plex Mono — Copyright 2017 IBM Corp.
+Oswald — Copyright 2016 The Oswald Project Authors
+Shippori Mincho (Latin) — Copyright 2020 The Shippori Mincho Project Authors
+Noto Serif SC (subset, used for the CJK range of the Shippori Mincho family
+  because the rail labels are simplified Chinese) — Copyright 2017 Adobe
+LXGW WenKai (subset) — Copyright (c) 2020 LXGW (https://github.com/lxgw/LxgwWenKai)
