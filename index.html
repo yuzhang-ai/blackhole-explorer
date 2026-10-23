@@ -562,29 +562,28 @@ function gridMask(px, cell) {
 function cunBand(e, S, bMul, bellyPx, phase) {
   let tang = nF(S.ang);
   let side = nF(S.ang.add(1.5707963));
-  let press = Z(1).sub(side.mul(side).mul(.55));
-  let half = S.bPx.mul(Z(bellyPx)).mul(e.strokeScale).mul(XP(Z(.42), Z(1), press)).mul(.5);
-  let bow = side.mul(.04).add(nF(side.mul(1.8).add(Z(phase))).mul(.018));
+  let press = Z(1).sub(side.mul(side).mul(.28));
+  let half = S.bPx.mul(Z(bellyPx)).mul(e.strokeScale).mul(XP(Z(.7), Z(1), press)).mul(.5);
+  let bow = side.mul(.025).add(nF(side.mul(2.4).add(Z(phase))).mul(.01));
   let bC = S.bCrit.mul(Z(bMul).add(bow));
   let rd = jP(S.impact.sub(bC));
-  let front = Z(1).sub(rF(Z(-.2), Z(.45), tang));
-  let onDisk = rF(Z(.15), Z(.5), S.diskA);
-  let outer = Z(1).sub(rF(S.bCrit.mul(2.15), S.bCrit.mul(2.7), S.impact));
-  let gate = front.mul(onDisk).mul(outer);
+  let front = Z(1).sub(rF(Z(-.12), Z(.55), tang));
+  let onDisk = rF(Z(.12), Z(.42), S.diskA);
+  let rim = rF(S.bCrit.mul(.12), S.bCrit.mul(.26), S.impact).mul(Z(1).sub(rF(S.bCrit.mul(1.32), S.bCrit.mul(1.58), S.impact)));
+  let outer = Z(1).sub(rF(S.bCrit.mul(2.3), S.bCrit.mul(2.85), S.impact));
+  let gate = front.mul(JP(onDisk, rim)).mul(outer);
   let acrossN = rd.div(half.max(S.bPx));
-  let lane = nF(acrossN.mul(6.8).add(Z(phase))).mul(.5).add(.5);
-  let fly = rF(Z(.58), Z(.84), lane);
-  let gapN = nF(side.mul(1.7).add(Z(phase).mul(1.2))).mul(.5).add(.5);
-  let punch = rF(Z(.62), Z(.86), gapN).mul(e.inkDry);
-  let coreMask = Z(1).sub(rF(half.mul(.1), half.mul(.36), rd));
-  let hair = rF(Z(.12), Z(.48), lane);
-  let shoulder = rF(half.mul(.22), half.mul(.7), rd).mul(hair);
-  let open = Z(1).sub(fly.mul(.85)).mul(Z(1).sub(punch));
-  let bellyInk = coreMask.mul(open);
-  let ink = FP(bellyInk.add(shoulder.mul(.4).mul(Z(1).sub(punch.mul(.7)))).mul(gate), 0, 1);
-  let wash = Z(1).sub(rF(half.mul(.28), half.mul(1.7), rd)).mul(gate).mul(Z(1).sub(fly.mul(.92))).mul(Z(1).sub(punch.mul(.85)));
-  let washMid = Z(1).sub(rF(half.mul(.12), half.mul(1.05), rd)).mul(gate).mul(open.add(.35)).mul(Z(1).sub(punch.mul(.3)));
-  let core = coreMask.mul(Z(1).sub(fly)).mul(Z(1).sub(punch)).mul(gate);
+  let lane = nF(acrossN.mul(13).add(Z(phase))).mul(.5).add(.5);
+  let fly = Z(1).sub(rF(Z(.0), Z(.16), lane));
+  let gapN = nF(side.mul(3.1).add(Z(phase))).mul(.5).add(.5);
+  let punch = rF(Z(.82), Z(.96), gapN).mul(e.inkDry).mul(.4);
+  let env = Z(1).sub(rF(half.mul(.15), half.mul(.72), rd));
+  let hair = rF(Z(.22), Z(.62), lane);
+  let bellyInk = env.mul(XP(Z(.35), Z(1), hair)).mul(Z(1).sub(fly.mul(.8))).mul(Z(1).sub(punch));
+  let ink = FP(bellyInk.mul(gate), 0, 1);
+  let wash = Z(1).sub(rF(half.mul(.02), half.mul(1.55), rd)).mul(gate).mul(Z(1).sub(fly.mul(.4))).mul(Z(1).sub(punch.mul(.35)));
+  let washMid = Z(1).sub(rF(half.mul(.08), half.mul(.88), rd)).mul(gate).mul(XP(Z(.45), Z(1), hair)).mul(Z(1).sub(punch.mul(.2)));
+  let core = env.mul(hair).mul(Z(1).sub(fly)).mul(Z(1).sub(punch)).mul(gate);
   return { ink, wash, washMid, core };
 }
 function lensArc(e, S) {
@@ -666,11 +665,22 @@ function styleInk(e, S) {
   col = XP(col, qing, halo.mul(.4));
   let ink = Z(0), wash = Z(0), washMid = Z(0), core = Z(0);
   let bands = [
-    [1.06, 38, 0.4],
-    [1.28, 46, 1.9],
-    [1.52, 40, 3.3],
-    [1.78, 44, 4.7],
-    [2.06, 34, 5.8]
+    [0.34, 16, 0.9],
+    [0.5, 18, 1.4],
+    [0.66, 20, 2.5],
+    [0.82, 20, 0.6],
+    [0.9, 22, 0.3],
+    [1.0, 18, 1.2],
+    [1.1, 20, 2.1],
+    [1.2, 16, 3.0],
+    [1.3, 19, 3.9],
+    [1.42, 16, 4.8],
+    [1.54, 18, 0.7],
+    [1.66, 15, 1.6],
+    [1.78, 17, 2.5],
+    [1.9, 16, 3.4],
+    [2.02, 15, 4.3],
+    [2.14, 14, 5.2]
   ];
   for (let s of bands) {
     let b = cunBand(e, S, s[0], s[1], s[2]);
