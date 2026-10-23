@@ -98,5 +98,30 @@ once(
     "this.thumbRT&&this.thumbRT.dispose()",
 )
 
+def upgrade(old, new):
+    global html
+    if new in html:
+        return
+    if old not in html:
+        raise SystemExit("upgrade missing: " + old[:90])
+    html = html.replace(old, new, 1)
+
+upgrade(
+    "styleId:Q(0),styleTier:Q(1)}",
+    "styleId:Q(0),styleTier:Q(1),strokeScale:Q(1),gridPitch:Q(28),inkDry:Q(.55)}",
+)
+upgrade(
+    "set(e){this.id=e|0,this._set&&this._set(this.id)}",
+    "set(e){let n=e|0;n!==this.id&&(this.taaReset=6),this.id=n,this._set&&this._set(n)}",
+)
+upgrade(
+    "oe=d||$.debugView>0?0:XI.capture?.12:ae?0:$.taaBlend;if(XI.capture&&h&&S===0)",
+    "oe=(d||window.__BH_STYLE_HOOK&&window.__BH_STYLE_HOOK.taaReset>0)||$.debugView>0?0:XI.capture?.12:ae?0:$.taaBlend;if(window.__BH_STYLE_HOOK&&window.__BH_STYLE_HOOK.taaReset>0)window.__BH_STYLE_HOOK.taaReset--;if(XI.capture&&h&&S===0)",
+)
+upgrade(
+    "e.taaBlend.value=$.taaBlend,e.styleTier&&(e.styleTier.value=eL.tier||1)}",
+    "e.taaBlend.value=$.taaBlend,e.styleTier&&(e.styleTier.value=eL.tier||1),e.styleId&&((e.styleId.value|0)===3)&&(e.bloomIntensity.value=0)}",
+)
+
 INDEX.write_text(html)
 print("spliced", INDEX, "bytes", INDEX.stat().st_size)
