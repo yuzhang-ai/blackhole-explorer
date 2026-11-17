@@ -8,6 +8,8 @@
 
 ## 在线运行
 
+**在线体验：<https://yuzhang-ai.github.io/blackhole-explorer/>**（GitHub Pages，直接打开即可，无需安装）
+
 使用支持 WebGL2 浮点渲染的新版 Chrome、Edge 或 Firefox，并开启硬件加速。
 
 直接双击 `index.html` 即可运行；也可以在项目根目录启动静态服务器：
