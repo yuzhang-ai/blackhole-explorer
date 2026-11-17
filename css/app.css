@@ -1,0 +1,35 @@
+:root { --ink: 244, 241, 234; --acc: 255, 122, 42; }
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: #000; overflow: hidden; overscroll-behavior: none;
+  font-family: "Source Han Serif SC", "Noto Serif CJK SC", "Noto Serif SC", "Songti SC", "STZhongsong", "SimSun", serif; color: rgb(var(--ink)); }
+.mono { font-family: "JetBrains Mono", "IBM Plex Mono", "SF Mono", Consolas, "DejaVu Sans Mono", monospace; }
+#view { position: fixed; inset: 0; width: 100vw; height: 100vh; display: block; cursor: grab; touch-action: none; }
+#view.drag { cursor: grabbing; }
+
+#brand, #tele, #styles, #hint, #fps { position: fixed; transition: opacity 0.6s ease, color 0.8s ease; user-select: none; }
+#brand { left: clamp(20px, 4vw, 56px); top: clamp(18px, 4vh, 44px); pointer-events: none; }
+#brand .cn { font-size: clamp(22px, 2.2vw, 30px); letter-spacing: 0.5em; font-weight: 500; }
+#brand .en { font: 11px/1 "JetBrains Mono", Consolas, monospace; letter-spacing: 0.62em; margin-top: 10px; color: rgba(var(--ink), 0.5); }
+
+#tele { right: clamp(20px, 4vw, 56px); top: clamp(22px, 4vh, 48px); font-size: 11px; letter-spacing: 0.16em; color: rgba(var(--ink), 0.45); text-align: right; white-space: pre; pointer-events: none; }
+#fps { right: clamp(20px, 4vw, 56px); top: calc(clamp(22px, 4vh, 48px) + 22px); font-size: 11px; letter-spacing: 0.1em; color: rgba(var(--acc), 0.9); text-align: right; white-space: pre; pointer-events: none; max-width: 46vw; overflow: hidden; text-overflow: ellipsis; }
+
+#styles { left: 50%; bottom: clamp(22px, 5vh, 48px); transform: translateX(-50%); display: flex; gap: 6px; padding: 6px;
+  border: 1px solid rgba(var(--ink), 0.14); border-radius: 999px; background: rgba(var(--ink), 0.045);
+  -webkit-backdrop-filter: blur(14px) saturate(1.2); backdrop-filter: blur(14px) saturate(1.2); }
+#styles button { all: unset; cursor: pointer; display: flex; align-items: baseline; gap: 10px; padding: 10px 20px 11px; border-radius: 999px;
+  color: rgba(var(--ink), 0.55); transition: background 0.4s ease, color 0.4s ease; white-space: nowrap; }
+#styles button .n { font: 10px/1 "JetBrains Mono", Consolas, monospace; letter-spacing: 0.1em; color: rgba(var(--ink), 0.35); }
+#styles button .cn { font-size: 17px; letter-spacing: 0.28em; margin-right: -0.28em; }
+#styles button .en { font: 9px/1 "JetBrains Mono", Consolas, monospace; letter-spacing: 0.3em; color: rgba(var(--ink), 0.35); }
+#styles button:hover { color: rgba(var(--ink), 0.9); }
+#styles button.on { background: rgba(var(--ink), 0.12); color: rgb(var(--ink)); }
+#styles button.on .n { color: rgb(var(--acc)); }
+#styles button:focus-visible { outline: 1px solid rgba(var(--acc), 0.9); outline-offset: 2px; }
+@media (max-width: 640px) { #styles button .en, #styles button .n { display: none; } #styles button { padding: 10px 18px; } #tele { display: none; } }
+
+#hint { left: 50%; bottom: calc(clamp(22px, 5vh, 48px) + 68px); transform: translateX(-50%); font-size: 11px; letter-spacing: 0.18em; color: rgba(var(--ink), 0.42); white-space: nowrap; pointer-events: none; }
+body.cinema #brand, body.cinema #tele, body.cinema #styles, body.cinema #hint { opacity: 0; pointer-events: none; }
+body.quiet #hint { opacity: 0; }
+#err { position: fixed; inset: 0; display: grid; place-items: center; padding: 40px; text-align: center; font-size: 18px; line-height: 1.9; background: #050505; }
+#err[hidden] { display: none; }

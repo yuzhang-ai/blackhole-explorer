@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><title>视界 · 自检</title>
+<style>
+  body { margin: 0; background: #0b0b0c; color: #e8e4da; font: 15px/1.7 Consolas, "JetBrains Mono", monospace; padding: 28px 36px; }
+  h1 { font: 500 22px/1 "Microsoft YaHei", sans-serif; letter-spacing: .1em; margin: 0 0 18px; }
+  pre { white-space: pre-wrap; margin: 0 0 18px; }
+  .ok { color: #7ddc8a; } .bad { color: #ff6b5e; font-weight: bold; }
+  canvas { width: 640px; height: 360px; border: 1px solid #333; display: block; margin-top: 8px; }
+  p { color: #8a877f; font: 13px/1.7 "Microsoft YaHei", sans-serif; }
+</style></head>
+<body>
+<h1>视界 · 着色器自检</h1>
+<pre id="out">正在编译…（最多十几秒）</pre>
+<canvas id="c"></canvas>
+<p>全部是绿色 ok 就说明这台机器可以正常运行，直接打开 index.html。<br>
+如果有红色项，请把这一页截图发给 Claude；再打开 edge://gpu（或 chrome://gpu），拉到最底部 “Log Messages”，把含 “error X” 的几行也截下来。</p>
+<script src="src/geodesic.js"></script>
+<script src="src/glsl-common.js"></script>
+<script src="src/glsl-real.js"></script>
+<script src="src/glsl-vangogh.js"></script>
+<script src="src/glsl-ink.js"></script>
+<script src="src/glsl-cosmos.js"></script>
+<script src="src/glsl-style.js"></script>
+<script src="src/glsl-post.js"></script>
+<script src="src/renderer.js"></script>
+<script src="src/seal.js"></script>
+<script>
+(function () {
+  var out = document.getElementById('out'), lines = [];
+  function log(html) { lines.push(html); out.innerHTML = lines.join('\n'); }
+  function esc(s) { return String(s).replace(/[&<>]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]; }); }
+  var NAMES = ['写实', '梵高', '水墨'];
+  var tests = [[0, 0], [1, 1], [2, 2], [0, 1], [1, 2], [2, 0], [1, 0], [0, 2], [2, 1]];
+  var R, gl;
+  function errs() { var e, l = []; while ((e = gl.getError())) l.push('0x' + e.toString(16)); return l.length ? l.join(',') : ''; }
+  function verdict(bad, text) { return '<span class="' + (bad ? 'bad' : 'ok') + '">' + esc(text) + '</span>'; }
+  lines = [];
+  try {
+    R = new BH.Renderer(document.getElementById('c'), { preserve: true }); gl = R.gl; R.resize(640, 360, 1); BH.makeSeal(R, '視界');
+  } catch (e) { log(verdict(true, '初始化失败: ' + e.message)); return; }
+  log('显卡: ' + esc(R.gpu));
+  var e0 = errs(); log('星空烘焙        ' + verdict(e0, e0 ? '失败 ' + e0 : 'ok'));
+  var px = new Uint8Array(4), fpx = new Float32Array(4), i = 0;
+  // post chain alone first, so a failure there is not blamed on the scene shaders
+  R.render({ postOnly: true }); gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px);
+  e0 = errs(); log('辉光与合成      ' + verdict(e0, e0 ? '失败 ' + e0 : 'ok'));
+  function next() {
+    if (i >= tests.length) {
+      R.render({ scene: 'star', clock: 5, sceneOnly: true }); gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.FLOAT, fpx);
+      var es = errs(); log('恒星与超新星    ' + verdict(es, es ? '绘制失败 ' + es : 'ok'));
+      R.render({ time: 3, flow: 9 }); gl.readPixels(320, 150, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px);
+      var ef = errs(), black = px[0] + px[1] + px[2] < 6;
+      log('整帧（写实）    ' + verdict(ef || black, ef ? '失败 ' + ef : (black ? '画面是黑的' : 'ok')) + '   像素 ' + [px[0], px[1], px[2]].join(','));
+      log('\n完成。');
+      return;
+    }
+    var a = tests[i][0], b = tests[i][1], name = (a === b ? NAMES[a] : NAMES[a] + ' → ' + NAMES[b]);
+    while (name.length < 10) name += '　';
+    var t0 = performance.now(), res, bad = false;
+    try {
+      R.sceneProgram(a, b);
+      var t1 = performance.now();
+      R.render({ from: a, to: b, mix: a === b ? 0 : 0.5, time: 3, flow: 9, sceneOnly: true });
+      gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.FLOAT, fpx);   // forces the driver to really compile and draw
+      var e = errs(); bad = !!e;
+      res = (e ? '绘制失败 ' + e : 'ok') + '   编译 ' + Math.round(t1 - t0) + ' ms，首帧 ' + Math.round(performance.now() - t1) + ' ms';
+    } catch (ex) { bad = true; res = '编译失败: ' + String(ex.message).slice(0, 400); }
+    log(esc(name) + ' ' + verdict(bad, res));
+    i++; setTimeout(next, 30);
+  }
+  setTimeout(next, 30);
+})();
+</script>
+</body></html>

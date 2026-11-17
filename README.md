@@ -1,12 +1,113 @@
-# Black Hole Explorer v6.7
+# 视界 · Event Horizon
 
-实时浏览器黑洞渲染（Schwarzschild 测地线查找表 + 吸积盘流动气体），WebGL/WebGPU。
+> 同一组光线方程，三种黑洞画法：写实、梵高与水墨。
 
-## 运行
-- 下载 Release 里的 `blackhole-v6.7-local.zip`，解压后双击 `start.bat`，浏览器打开 http://127.0.0.1:41731/ （加 `?fps=1` 显示帧率）。
-- 或直接用 Chrome/Edge 打开 `index.html`。
+一个可直接在浏览器中运行的实时黑洞渲染器。基于 **WebGL2** 和 **Schwarzschild 测地线查找表**，无需构建、无需第三方 JavaScript 库，也不加载外部贴图。
 
-本仓库为构建后的独立页面（脚本、样式与银河贴图内嵌于 index.html）。详见 `README-local.txt`。
+本仓库聚焦实时交互页面：完整的 HTML、CSS、JavaScript 与 GLSL 源码，以及三种画法之间的动态切换。
 
-## Credits
-Milky Way panorama: ESO/S. Brunier (https://www.eso.org/public/images/eso0932a/), CC BY 4.0.
+## 在线运行
+
+使用支持 WebGL2 浮点渲染的新版 Chrome、Edge 或 Firefox，并开启硬件加速。
+
+直接双击 `index.html` 即可运行；也可以在项目根目录启动静态服务器：
+
+```bash
+python -m http.server 8000
+```
+
+然后访问 <http://localhost:8000/>。
+
+如果画面全黑或无法初始化，打开 `diag.html`。它会逐项测试三种画法、所有过渡组合和完整渲染管线，并给出具体失败项。
+
+## 三种画法
+
+| 画法 | 视觉表现 | 源码 |
+| --- | --- | --- |
+| **写实 / Physical** | 黑体辐射、多普勒增亮、引力红移与流动吸积盘 | `src/glsl-real.js` |
+| **梵高 / Van Gogh** | 沿轨道排布的笔触、自适应笔宽与厚涂高光 | `src/glsl-vangogh.js` |
+| **水墨 / Ink Wash** | 长枯笔、飞白、高光留白、远山与印章 | `src/glsl-ink.js` |
+
+切换画法时，一道不规则前沿从黑洞向外扫过，新画法在前沿后逐笔出现。三种画法共享完全相同的光线弯曲与吸积盘几何，只改变视觉表达。
+
+## 交互操作
+
+| 操作 | 效果 |
+| --- | --- |
+| 拖动 | 旋转观察视角 |
+| 滚轮 / 双指缩放 | 靠近或远离黑洞 |
+| 双击 | 复位相机 |
+| `1` / `2` / `3` | 切换写实 / 梵高 / 水墨 |
+| `Space` | 暂停或继续气体流动 |
+| `C` | 切换影院模式，隐藏界面 |
+| `F` | 切换全屏 |
+
+### 地址栏参数
+
+| 参数 | 说明 |
+| --- | --- |
+| `?style=real` | 初始使用写实画法；也可使用 `vg`、`ink` |
+| `?cinema=1` | 启动时隐藏界面 |
+| `?fps=1` | 显示帧率、分辨率倍率和显卡信息 |
+| `?dyn=0` | 关闭自适应分辨率 |
+| `?drift=0` | 关闭闲置时的自动环绕 |
+
+参数可以组合，例如：
+
+```text
+index.html?style=ink&cinema=1&fps=1
+```
+
+## 渲染原理
+
+### 1. 把光线积分搬到查找表
+
+在 Schwarzschild 度规下，每条光线都位于一个经过黑洞的平面内。令 `u = 1/r`，轨道满足：
+
+```text
+u'' + u = 3u²
+```
+
+`src/geodesic.js` 在页面初始化时使用 RK4 积分，生成一张 **1024 × 1024** 的 `U(b, ψ)` 查找表，其中 `b` 是瞄准距离，`ψ` 是轨道角。吸积盘与轨道面的交线角度已知，因此着色器每次穿盘只需查表，不必逐像素步进积分。
+
+### 2. 三种画法共享同一份几何
+
+`src/glsl-common.js` 为每个像素计算最多三次穿盘的位置、半径、方位角、红移因子和弯曲后的天空方向。三种画法只读取这份几何，因此改变画风不会改变黑洞的物理结构。
+
+- **写实**：按径向温度计算黑体色，叠加多普勒增亮与引力红移；气体使用 `(log r, 角度)` 空间中的七层细丝噪声，并随开普勒较差自转流动。
+- **梵高**：笔触附着在物体坐标中，盘上沿轨道、天空沿透镜后的方向排布，转动视角时笔触仍贴着物体走。
+- **水墨**：墨迹沿轨道展开，后段逐渐只剩笔锋并形成飞白；最亮处保留纸色，远山、云雾和印章均由程序生成。
+
+### 3. 按需编译与后期处理
+
+`src/glsl-style.js` 负责绘画式过渡。场景着色器按「来源画法 → 目标画法」按需编译，其余组合在后台预热，避免首次切换卡顿。
+
+`src/renderer.js` 与 `src/glsl-post.js` 负责 HDR 渲染目标、多级辉光、电影式色调映射、颗粒、暗角和最终合成。交互页还会根据帧耗时自动调整内部分辨率。
+
+## 项目结构
+
+```text
+index.html                  实时交互页面
+diag.html                   着色器与渲染管线自检
+debug.html                  帧率诊断入口
+css/app.css                 界面样式与影院模式
+src/
+  app.js                    相机、输入、画法切换与自适应分辨率
+  renderer.js               WebGL2 渲染管线
+  geodesic.js               Schwarzschild 测地线查找表
+  glsl-common.js            公共几何、噪声与程序化星空
+  glsl-real.js              写实画法
+  glsl-vangogh.js           梵高画法
+  glsl-ink.js               水墨画法
+  glsl-style.js             画法过渡
+  glsl-post.js              辉光与最终合成
+  seal.js                   程序生成的水墨印章
+  glsl-cosmos.js            恒星与超新星扩展场景，供诊断及后续实验使用
+```
+
+## 物理与兼容性说明
+
+- 物理模型是 Schwarzschild（非旋转）黑洞、几何薄盘和静止观察者；未模拟 Kerr 自旋或相机运动的光行差。
+- 盘面颜色、亮度曲线与部分艺术效果经过视觉调整，不应视为定量辐射转移模拟。
+- 本版使用 WebGL2，需要 `EXT_color_buffer_float` 或 `EXT_color_buffer_half_float`。
+- 为兼容 Windows 浏览器的 Direct3D 着色器编译器，着色器刻意避免带 `break` / `continue` 的循环、提前 `return` 和循环内数组写入。
